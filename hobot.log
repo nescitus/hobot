@@ -1,0 +1,8 @@
+I     0/000 hobot Version 1.0.0
+I     0/000 size of struct Position = 15808 bytes
+I     0/000 size of struct TreeNode = 48 bytes
+I     0/000 size of int       = 4 bytes
+I     0/000 size of long      = 4 bytes
+I     0/000 size of long long = 8 bytes
+T     0/000 time          :  nsims seconds  sims/s moves tleft
+S     0/000 search: idum dkomi 1st (2nd) rep best2  bestr bestwr games/s
