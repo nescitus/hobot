@@ -16,8 +16,9 @@ int   PRIOR_LARGEPATTERN = 300;  // most moves have relatively small probability
 int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
 int   PRIOR_EMPTYAREA    = 10;
-int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
-int DYNKOMI_PERIOD         = 1;
+int   lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
+int   DYNKOMI_PERIOD         = 1;
+int   HEAVY_PLAYOUT_DEPTH = 8;
 
 // --------------- Initial Values for Random Policy parameters-- --------------
 double PROB_HEURISTIC_CAPTURE = 0.9;   // probability of heuristic suggestions
