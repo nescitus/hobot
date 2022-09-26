@@ -106,6 +106,8 @@ Position* new_position();
 char*  pass_move(Position *pos);
 char*  play_move(Position *pos, Point pt);
 char*  undo_move(Position *pos);
+int count_atari(Position* pos, Point pt);
+int count_shortages(Position* pos, Point pt);
 //----------------------- Functions in board_util.c  --------------------------
 int    all_blocks_OK(Position *pos);
 int    blocks_OK(Position *pos, Point pt);
@@ -181,7 +183,7 @@ __INLINE__ void  board_set_size(Position *pos, int sz) {pos->size = sz;}
 __INLINE__ int   board_size(Position *pos) {return pos->size;}
 __INLINE__ int   board_captured_neighbors(Position *pos) 
                                                    {return pos->undo_capture;}
-__INLINE__ Color color_other(Color c)                 {return c ^ 1;}
+__INLINE__ Color color_other(Color c)                 {return (Color)((int)c ^ 1);}
 __INLINE__ Block point_block(Position *pos, Point pt) {return pos->block[pt];}
 __INLINE__ Color point_color(Position *pos, Point pt) {return pos->color[pt];}
 __INLINE__ Byte  point_env4(Position *pos, Point pt)  {return pos->env4[pt];}

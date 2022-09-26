@@ -835,6 +835,26 @@ int count_atari(Position* pos, Point pt)
         return cnt;
 }
 
+int count_shortages(Position* pos, Point pt)
+// Return a number of blocks in atari in contact with point pt
+{
+    Color c;
+    int   k;
+    Point n;
+    int cnt = 0;
+
+    c = color_other(point_color(pos, pt));
+
+    FORALL_NEIGHBORS(pos, pt, k, n) {
+        if (point_color(pos, n) == c) {
+            Block b1 = point_block(pos, n);
+            if (block_nlibs(pos, b1) < 3) cnt++;
+        }
+    }
+
+    return cnt;
+}
+
 
 void make_list_neighbor_blocks_in_atari(Position *pos, Block b, Slist blocks, Point pt) 
 // Return a list of blocks in atari in contact with block b

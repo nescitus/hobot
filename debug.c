@@ -129,7 +129,10 @@ char* debug(Game *game, char *command)
             ret = slist_str_as_point(libs);
         }
     }
-    else if (strcmp(command, "gen_playout") == 0) {
+
+    // obsolete
+    else if (strcmp(command, "gen_playout") == 0) 
+    {
         char *suggestion = strtok(NULL, " \t\n");
         if (suggestion != NULL) {
             Point last_moves_neighbors[40];
@@ -145,8 +148,11 @@ char* debug(Game *game, char *command)
         else
             ret = "Error - missing [capture|pat3]";
     }
-    else if (strcmp(command, "atari") == 0) {
 
+    // does a stone in question give atari?
+    
+    else if (strcmp(command, "atari") == 0) 
+    {
         char* str = strtok(NULL, " \t\n");
         if (str == NULL) ret = "Error missing point";
         else {
@@ -158,15 +164,20 @@ char* debug(Game *game, char *command)
             }
 
             int cnt = count_atari(pos, pt);
-            if (cnt == 0) ret = "no atari";
-            else if (cnt == 1) ret = "single atari";
-            else ret = "double atari";
-            
+            if (cnt == 0) 
+                ret = "no atari";
+            else if (cnt == 1) 
+                ret = "single atari";
+            else 
+                ret = "double atari";       
         }
     }
 
+    // does an empty intersection match a pattern?
+
     else if (strcmp(command, "match_pat") == 0 
-         ||  strcmp(command, "pat") == 0) {
+         ||  strcmp(command, "pat") == 0) 
+    {
         char *str = strtok(NULL, " \t\n");
         if(str == NULL) ret = "Error missing point";
         else {
@@ -179,7 +190,9 @@ char* debug(Game *game, char *command)
             ret = make_list_pat_matching(pt, verbose);
         }
     }
-    else if (strcmp(command, "min_lib") == 0) {
+    /*
+    else if (strcmp(command, "min_lib") == 0) 
+    {
         char* str = strtok(NULL, " \t\n");
         if (str == NULL) {
             ret = "Error -- point missing";
@@ -204,6 +217,7 @@ char* debug(Game *game, char *command)
         else
             ret = "boring";
     }
+    */
     else if (strcmp(command, "fix_atari") == 0) {
         int is_atari;
         char *str = strtok(NULL, " \t\n");

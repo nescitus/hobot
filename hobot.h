@@ -16,7 +16,7 @@
 // ---------------------------- MCTS Constants --------------------------------
 extern int   N_SIMS, MAX_TIME, RAVE_EQUIV, EXPAND_VISITS;
 extern int   PRIOR_EVEN, PRIOR_SELFATARI, PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_MANY;
-extern int   PRIOR_PAT3, PRIOR_LARGEPATTERN, LEN_PRIOR_CFG, PRIOR_EMPTYAREA, PRIOR_CORNER;
+extern int   PRIOR_PAT3, PRIOR_LARGEPATTERN, LEN_PRIOR_CFG, PRIOR_EMPTYAREA;
 extern int   lib_shortage_bonus[11];
 extern int   PRIOR_CFG[], LEN_PRIOR_CFG;
 extern int   REPORT_PERIOD;
@@ -29,6 +29,7 @@ extern int HEAVY_PLAYOUT_DEPTH;
 //------------------------------Unexposed constants----------------------------
 extern double URGENT_PATTERN_SCORE;
 extern double TENUKI_PATTERN_SCORE;
+extern double TERMINATE_PLAYOUT;  // mercy break limit
 //------------------------------- Data Structures -----------------------------
 typedef struct {
     char    name[2][32];    // players name 
@@ -91,6 +92,8 @@ extern int          nplayouts_real;
 extern float        saved_time_left;
 extern float        best2, bestr, bestwr;
 extern ZobristHash  zobrist_hashdata[ZOBRIST_HASH_SIZE][4];
+extern int is_beyond_one_third; // are we beyond 1/3 of alloted simulations?
+extern int disp_ladder;
 
 //================================== Code =====================================
 //------------------------- Functions in control.c ----------------------------
@@ -104,9 +107,10 @@ char*  debug(Game *game, char *command);
 //-------------------------- Functions in detect.c ----------------------------
 int    line_height(Point pt, int size);
 int    is_corner(Point pt, int size);
-int    empty_area(Position* pos, Point pt, int dist);
+int    is_empty_area(Position* pos, Point pt, int dist);
 int    no_stones_of_color(Position* pos, Point pt, int dist, Color color);
-int    get_min_libs(Position* pos, Point pt);
+int    get_min_libs(Position* pos, Point pt, Color c);
+int    has_more_libs(Position* pos, Point pt, Color c);
 //-------------------------- Functions in hobot.c -----------------------------
 TreeNode* best_move(TreeNode *tree, TreeNode **except);
 void   collect_infos(TreeNode *tree, int n, TreeNode *best
@@ -121,16 +125,29 @@ int    gen_playout_moves_capture(Position *pos, Slist heuristic_set, float prob,
                                 int expensive_ok, Slist moves, Slist sizes);
 int    gen_playout_moves_pat3(Position *pos, Slist heuristic_set, float prob,
                                                                   Slist moves);
-double mcplayout(Position *pos, int amaf_map[], int owner_map[],
-                                        int score_count[2*N*N], int disp);
 TreeNode* new_tree_node(void);
 void   print_pos(Position *pos, FILE *f, int *owner_map);
 Point  tree_search(Position *pos, TreeNode *tree, int n, int owner_map[],
                                              int score_count[], int disp);
+Point choose_from(Position* pos, Slist moves, char* kind, int disp);
+int ignore_move(Position* pos, Point pt, Color c);
+Point random_move_by_coors();
+Point choose_random_move(Position* pos, Point i0, int disp);
+Point choose_uniform_random_move(Position* pos, Point i0, int disp);
+//------------------------- Functions in playout.c ----------------------------
+double mcplayout(Position* pos, int amaf_map[], int owner_map[],
+    int score_count[2 * N * N], int disp);
+double hobot_playout(Position* pos, int amaf_map[], int owner_map[],
+    int score_count[2 * N * N + 1], int disp);
+double random_playout(Position* pos, int amaf_map[], int owner_map[],
+    int score_count[2 * N * N + 1], int disp);
+int get_capture_score(Position* pos);
+double get_playout_score(Position* pos, int owner_map[], int score_count[2 * N * N + 1]);
 //--------------------------- Functions in komi.c -----------------------------
 void adjust_komi(Position* pos, double best_wr);
 //-------------------------- Functions in reject.c ----------------------------
 int is_rejected_in_tree(Position* pos, Point pt);
+int is_rejected_in_playout(Position* pos, Point pt);
 int is_rejected_by_height(Position* pos, Point pt);
 //-------------------------- Functions in params.c ----------------------------
 void   make_params_default(FILE *f);
@@ -144,7 +161,8 @@ char*  make_list_pat3_matching(Position *pos, Point pt);
 char*  make_list_pat_matching(Point pt, int verbose);
 void   init_large_patterns(const char *prob, const char *spat);
 void   log_hashtable_synthesis();
-double large_pattern_probability(Point pt);
+double large_pattern_probability(Point pt, Point ko);
+double large_pattern_prob_no_stats(Point pt, Point ko);
 void   init_zobrist_hashdata(void);
 //---------------------------- Functions in sgf.c -----------------------------
 Game*  new_game(Position *pos);
@@ -167,6 +185,13 @@ Point get_move(Position* pos, char* sequence, char* moves, int nstones);
 Point choice_from_str(char* str, int rot);
 Point create_pt(int x, int y);
 int split(char* str, char c, char*** arr);
+
+//-------------------------- Functions in gen.c ----------------------------
+
+int gen_potential_tree_moves(Position* pos, Point moves[BOARDSIZE], Point i0);
+Point choose_side_tactics(Position* pos, Slist heuristic_set, float prob, int disp, int color);
+Point choose_capture_move(Position* pos, Slist heuristic_set, float prob, int disp);
+Point choose_large_pattern_move(Position* pos, Slist move_set, int disp);
 
 //-------------------- Functions inlined for simplicity -----------------------
 __INLINE__ int   game_handicap(Game *game) { return game->handicap;}

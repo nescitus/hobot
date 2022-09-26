@@ -111,6 +111,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <CompileAs>CompileAsC</CompileAs>
+      <LanguageStandard>stdcpp14</LanguageStandard>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -128,6 +130,7 @@
     <ClCompile Include="params.c" />
     <ClCompile Include="patterns_large.c" />
     <ClCompile Include="patterns_small.c" />
+    <ClCompile Include="playout.c" />
     <ClCompile Include="reject.c" />
     <ClCompile Include="sgf.c" />
     <ClCompile Include="ui.c" />

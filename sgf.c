@@ -206,7 +206,7 @@ char* storesgf(Game *game, const char *filename, const char* version)
 
         // write the moves
         FORALL_IN_SLIST(game->moves, m) {
-            Color c = m >> 22;
+            Color c = (Color)(m >> 22);
             m &= 511;
             char color = (c == BLACK) ? 'B' : 'W';
             fprintf(f, ";%c[%s]", color, str_sgf_coord(m, str, size));

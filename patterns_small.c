@@ -57,9 +57,9 @@ char pat3src[][10] = {
     "X.." 
     "x.?",
 
-    //"XOO",  // hane pattern - thin hane
-    //"...",
-    //"?.?", "X",  - only for the X player
+   // "XOO",  // hane pattern - thin hane
+   // "...",
+   // "?.?", //"X",  - only for the X player
 
     ".O."   // 4- generic pattern - katatsuke or diagonal attachment; //similar to magari            
     "X.." 

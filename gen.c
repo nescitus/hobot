@@ -84,8 +84,6 @@ int gen_playout_moves_pat3(Position* pos, Slist heuristic_set, float prob,
             if (point_color(pos, pt) == EMPTY) {
                 if (pat3_match(pos, pt))
                     slist_push(moves, pt);
-                //else if (get_min_libs(pos, pt) < 4) // CRASHES
-                   // slist_push(moves, pt);
             }
         }
 
@@ -115,28 +113,86 @@ int gen_playout_moves_pat_large(Position* pos, Slist heuristic_set, float prob,
     return slist_size(moves);
 }
 
+Point choose_large_pattern_move(Position* pos, Slist move_set, int disp)
+{
+    Point move = PASS_MOVE;
+    Point moves[BOARDSIZE];
+
+    if (gen_playout_moves_pat_large(pos, move_set, 1.000, moves)) 
+    {
+        mark_init(already_suggested);
+        move = choose_from(pos, moves, "pat_large", disp);
+        mark_release(already_suggested);
+    }
+
+    return move;
+}
+
+Point choose_side_tactics(Position* pos, Slist heuristic_set, float prob, int disp, int color)
+// Replace the sequence gen_playout_capture_moves(); choose_from()
+{
+    int   twolib_edgeonly = 1;
+    Point move = PASS_MOVE, moves[20], sizes[20];
+
+    if (random_int(10000) <= prob * 10000.0)
+    {
+        mark_init(already_suggested);
+        FORALL_IN_SLIST(heuristic_set, pt)
+            if (point_color(pos, pt) == color)
+            {
+                Block b = point_block(pos, pt);
+
+                if (is_marked(already_suggested, b))
+                    continue;
+
+                mark(already_suggested, b);
+
+                fix_atari(pos, pt, SINGLEPT_NOK, TWOLIBS_TEST,
+                    twolib_edgeonly, moves, sizes);
+
+                slist_shuffle(moves);
+
+                move = choose_from(pos, moves, "defence", disp);
+
+                if (move != PASS_MOVE)
+                    break;
+            }
+
+        mark_release(already_suggested);
+    }
+    return move;
+}
+
 Point choose_capture_move(Position* pos, Slist heuristic_set, float prob, int disp)
 // Replace the sequence gen_playout_capture_moves(); choose_from()
 {
     int   twolib_edgeonly = 1;
     Point move = PASS_MOVE, moves[20], sizes[20];
 
-    if (random_int(10000) <= prob * 10000.0) {
+    if (random_int(10000) <= prob * 10000.0) 
+    {
         mark_init(already_suggested);
         FORALL_IN_SLIST(heuristic_set, pt)
-            if (point_is_color(pos, pt)) {
+            if (point_is_color(pos, pt)) 
+            {
                 Block b = point_block(pos, pt);
+                
                 if (is_marked(already_suggested, b))
                     continue;
+                
                 mark(already_suggested, b);
+                
                 fix_atari(pos, pt, SINGLEPT_NOK, TWOLIBS_TEST,
                     twolib_edgeonly, moves, sizes);
+                
                 slist_shuffle(moves);
 
                 move = choose_from(pos, moves, "capture", disp);
+                
                 if (move != PASS_MOVE)
                     break;
             }
+
         mark_release(already_suggested);
     }
     return move;

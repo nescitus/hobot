@@ -10,6 +10,8 @@ MIT licence (i.e. almost public domain)
 */
 #include "hobot.h"
 
+static int   delta[] = { -N - 1,   1,  N + 1,   -1, -N,  W,  N, -W };
+
 double URGENT_PATTERN_SCORE = 0.200; // triggers urgent move scenario
 double TENUKI_PATTERN_SCORE = 0.199; // allows tenuki in urgent move scenario
 double TERMINATE_PLAYOUT = 75;
@@ -203,7 +205,7 @@ int fix_atari(Position *pos, Point pt, int singlept_ok
             block_compute_libs(pos, b, libs, maxlibs);
             if (twolib_edgeonly
             && ((line_height(libs[1], board_size(pos)))>0 
-                 || (line_height(libs[2], board_size(pos)))>0)) {
+            || (line_height(libs[2], board_size(pos)))>0)) {
                 // no expensive ladder check
                 return 0;
             }
@@ -274,8 +276,8 @@ int fix_atari(Position *pos, Point pt, int singlept_ok
 //========================= Montecarlo playout policy =========================
 
 
-int ignore_move(Position* pos, Point pt, Color c) {
-
+int ignore_move(Position* pos, Point pt, Color c) 
+{
     // ignore NOT EMPTY Points
 
     if (point_color(pos, pt) != EMPTY)
@@ -294,6 +296,33 @@ int ignore_move(Position* pos, Point pt, Color c) {
     // accept move
 
     return 0; 
+}
+
+Point choose_uniform_random_move(Position* pos, Point i0, int disp)
+// Replace the sequence gen_playout_moves_random(); choose_from()
+{
+    char* ret;
+    Color c = board_color_to_play(pos);
+    Info     sizes[20];
+    Point    ds[20], i = i0, move = PASS_MOVE;
+
+    do {
+        if (point_color(pos, i) != EMPTY)
+            goto not_found;
+
+        if (is_eye(pos, i) == c)
+            goto not_found;  // ignore true eyes for player
+
+        ret = play_move(pos, i);
+        if (ret[0] == 0) {    // move OK
+            move = i;
+            break;
+        }
+    not_found:
+        i++;
+        if (i >= BOARD_IMAX) i = BOARD_IMIN - 1;
+    } while (i != i0);
+    return move;
 }
 
 Point choose_random_move(Position *pos, Point i0, int disp)
@@ -345,8 +374,10 @@ Point choose_from(Position *pos, Slist moves, char *kind, int disp)
     Point  move = PASS_MOVE, ds[20];
 
     FORALL_IN_SLIST(moves, pt) {
+        
         if (is_marked(already_suggested, pt))
             continue;
+
         mark(already_suggested, pt);
         if (disp && strcmp(kind, "random")!=0)
             fprintf(stderr,"move suggestion (%s) %s\n", kind,str_coord(pt,buf));
@@ -358,7 +389,8 @@ Point choose_from(Position *pos, Slist moves, char *kind, int disp)
             if (strcmp(kind,"random") == 0) tstrej = r<=10000.0*PROB_RSAREJECT;
             else                            tstrej = r<= 10000.0*PROB_SSAREJECT;
             if (tstrej) {
-                slist_clear(ds); slist_clear(sizes);
+                slist_clear(ds); 
+                slist_clear(sizes);
                 fix_atari(pos, pt, SINGLEPT_OK, TWOLIBS_TEST, 1, ds, sizes);
                 if (slist_size(ds) > 0) {
                     if(disp) fprintf(stderr, "rejecting self-atari move %s\n",
@@ -375,161 +407,46 @@ Point choose_from(Position *pos, Slist moves, char *kind, int disp)
     return move;
 }
 
-double playout_score(Position *pos, int owner_map[], int score_count[2*N*N+1])
-// compute score (>0 if BLACK wins); this assumes a final position with all 
-// dead stones captured and only single point eyes on the board ...
+
+int gen_connections(Position* pos, Slist heuristic_set, float prob,
+    Slist moves)
 {
-    double s1;
-    int s=0;
-
-    FORALL_POINTS(pos,pt) {
-        Color c = point_color(pos, pt);
-        if (c == EMPTY) c = is_eyeish(pos,pt);
-        if (c == BLACK) {
-            s++;
-            owner_map[pt]++;
-        }
-        else if (c == WHITE) {
-            s--;
-            owner_map[pt]--;
-        }
-    }
-    s1 = s;
-    score_count[s + N*N]++;
-    return s1 - board_komi(pos) - board_delta_komi(pos);
-}
-
-double mcplayout(Position *pos, int amaf_map[], int owner_map[],
-                                           int score_count[2*N*N+1], int disp)
-// Start a Monte Carlo playout from a given position, return score for to-play
-// player at the starting position; amaf_map is board-sized scratchpad recording// who played at a given position first
-{
-    int depth = 0;
-    double s=0.0;
-    int    passes=0;
-    Point  last_moves_neighbors[40], moves[BOARDSIZE], move;
-    if(disp) {
-        disp_ladder = 1;
-        fprintf(stderr, "** SIMULATION **\n");
-    }
-
-    if (board_nmoves(pos)>0 && board_last_move(pos)==0) 
-        passes = 1;
-
-    while (passes < 2 && board_nmoves(pos) < MAX_GAME_LEN) {
-        hobot_assert(pos, all_blocks_OK(pos));
-        move = 0;
-        if(disp) { 
-            fprintf(stderr, "mcplayout: idum = %u\n", idum);
-            print_pos(pos, stderr, NULL);
-        }
-        // We simply try the moves our heuristics generate, in a particular
-        // order, but not with 100% probability; this is on the border between
-        // "rule-based playouts" and "probability distribution playouts".
-        make_list_last_moves_neighbors(pos, last_moves_neighbors, 4);
-
-        // Capture heuristic suggestions
-        if((move=choose_capture_move(pos, last_moves_neighbors, 
-                        PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
-                goto found;
-
-        if (depth < HEAVY_PLAYOUT_DEPTH && is_beyond_one_third == 0) {
-
-            if (random_int(10000) <= 0.25 * 10000.0) 
+    slist_clear(moves);
+        mark_init(already_suggested);
+        FORALL_IN_SLIST(heuristic_set, pt) {
+            if (point_color(pos, pt) == EMPTY) 
             {
-                Point allmoves[BOARDSIZE];
-                gen_potential_tree_moves(pos, allmoves, BOARD_IMIN - 1);
-
-                if (gen_playout_moves_pat_large(pos, allmoves, 1.000, moves)) {
-                    mark_init(already_suggested);
-                    if ((move = choose_from(pos, moves, "pat", disp)) != PASS_MOVE) {
-                        mark_release(already_suggested);
-                        goto found;
-                    }
-                    mark_release(already_suggested);
-                }
+                if (is_connecting(pos, pt))
+                    slist_push(moves, pt);
             }
         }
         
-        // ko
-
-        Point pt = pos->ko;
-        if (pt != PASS_MOVE && random_int(10000) <= 0.05 * 10000.0) {
-
-            char* ret = play_move(pos, pt);
-
-            // Possible failure reasons:
-            // move is suicide, move retakes ko. 
-
-            if (ret[0] != 0)
-                continue;
-
-            undo_move(pos, pt);
-            move = pt;
-            goto found;
-        }
-
-        // 3x3 patterns heuristic suggestions
-        if (gen_playout_moves_pat3(pos, last_moves_neighbors,
-                                           PROB_HEURISTIC_PAT3, moves)) {
-            mark_init(already_suggested);
-            if((move=choose_from(pos, moves, "pat3", disp)) != PASS_MOVE) {
-                mark_release(already_suggested);
-                goto found;
-            }
-            mark_release(already_suggested);
-        }
-            
-        int x0 = random_int(N) + 1, y0 = random_int(N) + 1;
-
-
-        // random move suggestions
-        // (called two additional times if selected move
-        // is marked for rejection)
-
-        pt = random_move_by_coors();
-        if (is_rejected_in_playout(pos, pt))
-            pt = random_move_by_coors();
-        if (is_rejected_in_playout(pos, pt))
-            pt = random_move_by_coors();
-
-        move = choose_random_move(pos, y0*(N+1) + x0 , disp);
-found:
-        depth++;
-        if (move == PASS_MOVE) {      // No valid move : pass
-            pass_move(pos);
-            passes++;
-        }
-        else {
-            if (amaf_map[move] == 0)      // mark the point with 1 for BLACK
-                // WHITE because in michi.py pos is updated after this line
-                amaf_map[move] = (board_color_to_play(pos) == WHITE ? 1 : -1);
-                // TODO: make amaf premium depth-dependent
-            passes=0;
-        }
-
-        // mercy break
-
-        double capt_score = get_capture_score(pos);
-
-        if (capt_score > TERMINATE_PLAYOUT
-        || capt_score < -TERMINATE_PLAYOUT) {
-
-            //short_playouts_nb++;
-            return capt_score;
-        }
-
-    }
-    s = playout_score(pos, owner_map, score_count);
-    return s;
+        mark_release(already_suggested);
+    return slist_size(moves);
 }
 
-int get_capture_score(Position* pos)
+int is_connecting(Position* pos, int pt) 
 {
-    return (pos->caps[1] - pos->caps[0] - board_komi(pos) - board_delta_komi(pos));
+    int k, n;
+    Color c = pos->to_play;
+    Block b = 888;
+    Block b1 = 888;
+
+    FORALL_NEIGHBORS(pos, pt, k, n) {
+        if (point_color(pos, n) == c) {
+            Block curr = point_block(pos, n);
+            if (curr == b || curr == b1)
+                return 1;
+            b1 = b;
+            b = curr;
+        }
+    }
+
+    return 0;
 }
 
-Point random_move_by_coors() {
+Point random_move_by_coors() 
+{
     int x0 = random_int(N) + 1;
     int y0 = random_int(N) + 1;
     Point pt = y0 * (N + 1) + x0;
@@ -555,6 +472,7 @@ void expand(Position *pos, TreeNode *tree)
     Position pos2;
     TreeNode *childset[BOARDSIZE], *node;
     double pattern_scores[BOARDSIZE];
+    Color oppo = color_other(pos->to_play);
 
     // Prepare common fate graph map
 
@@ -625,6 +543,7 @@ void expand(Position *pos, TreeNode *tree)
     gen_playout_moves_pat3(pos, allpoints, 1, moves);
     
     FORALL_IN_SLIST(moves, pt) {
+
         char* ret = play_move(pos, pt);
         
         if (ret[0] != 0) 
@@ -655,7 +574,7 @@ void expand(Position *pos, TreeNode *tree)
 
         int height = line_height(pt, board_size(pos));  // 0-indexed
 
-        if (height <= 3 && empty_area(pos, pt, 3)) {
+        if (height <= 3 && is_empty_area(pos, pt, 3)) {
 
             // No stones around; negative prior for the 1st + 2nd lines, 
             // positive for the 3rd line and smaller positive prior 
@@ -767,7 +686,7 @@ void expand(Position *pos, TreeNode *tree)
 
         
         if (in_atari == 0) {
-            int cnt = count_atari(pos2, pt);
+            int atari_cnt = count_atari(&pos2, pt);
 
             // negative prior for a vulgar atari
             // that does not capture anything
@@ -781,7 +700,7 @@ void expand(Position *pos, TreeNode *tree)
 
             // double atari
 
-            if (cnt > 1) {
+            if (atari_cnt > 1) {
                 node->prior_visits += 10;
                 node->prior_wins += 10;
             }
@@ -805,7 +724,7 @@ void expand(Position *pos, TreeNode *tree)
             }
         }
         else {
-            int min_libs = get_min_libs(pos, pt);
+            int min_libs = get_min_libs(pos, pt, oppo);
             if (min_libs < 10) {
                 node->prior_visits += lib_shortage_bonus[min_libs];
                 node->prior_wins += lib_shortage_bonus[min_libs];
