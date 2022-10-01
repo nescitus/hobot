@@ -502,8 +502,7 @@ double large_pattern_probability(Point pt)
     return prob;
 }
 
-double large_pattern_prob_no_stats(Point pt, Point ko)
-
+double large_pattern_prob_no_stats(Point pt)
 // return probability of large-scale pattern at coordinate pt. 
 // Multiple progressively wider patterns may match a single coordinate,
 // we consider the largest one.

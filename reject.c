@@ -2,36 +2,33 @@
 
 #include "hobot.h"
 
-int is_rejected_in_tree(Position* pos, Point pt) 
-{
+int is_rejected_in_tree(Position* pos, Point pt) {
     return is_rejected_by_height(pos, pt);
 }
 
-int is_rejected_in_playout(Position* pos, Point pt) 
-{
+int is_rejected_in_playout(Position* pos, Point pt) {
+
     if (point_color(pos, pt) != EMPTY)
         return 1;
 
     return is_rejected_by_height(pos, pt);
 }
 
-int is_rejected_by_height(Position* pos, Point pt) 
-{
+int is_rejected_by_height(Position* pos, Point pt) {
+
     int height = line_height(pt, board_size(pos));
 
     // low move and no stones nearby
 
-    if (height < 2) 
-    {
-        if (is_empty_area(pos, pt, 5))
+    if (height < 2) {
+        if (empty_area(pos, pt, 5))
             return 1;
     }
 
     // high move and no stones nearby
 
-    if (height > 5) 
-    {
-        if (is_empty_area(pos, pt, 5))
+    if (height > 5) {
+        if (empty_area(pos, pt, 5))
             return 1;
     }
 
@@ -39,8 +36,7 @@ int is_rejected_by_height(Position* pos, Point pt)
     // of both colours in its remote vicinity
     // or any stone placed much closer
 
-    if (height == 0 && is_empty_area(pos, pt, 3)) 
-    {
+    if (height == 0 && empty_area(pos, pt, 3)) {
         Color color = board_color_to_play(pos);
 
         if (no_stones_of_color(pos, pt, 5, color))

@@ -14,22 +14,7 @@ int line_height(Point pt, int size)
     else           return col - 1;
 }
 
-int is_corner(Point pt, int size)
-{
-    div_t d = div(pt, N + 1);
-    int row = d.quot, col = d.rem;
-    if (row > size / 2) row = size + 1 - row;
-    if (col > size / 2) col = size + 1 - col;
-    row = row - 1;
-    col = col - 1;
-
-    if ((row == 2 || row == 3) && (col == 2 || col == 3)) {
-        return 1;
-    }
-    return 0;
-}
-
-int is_empty_area(Position* pos, Point pt, int dist)
+int empty_area(Position* pos, Point pt, int dist)
 // Check whether there are any stones in Manhattan distance up to dist
 {
     int   k;
@@ -38,7 +23,7 @@ int is_empty_area(Position* pos, Point pt, int dist)
         if (point_is_color(pos, n))
             return 0;
         else if (point_color(pos, n) == EMPTY
-             && dist > 1 && !is_empty_area(pos, n, dist - 1))
+             && dist > 1 && !empty_area(pos, n, dist - 1))
             return 0;
     }
     return 1;
@@ -55,9 +40,10 @@ int no_stones_of_color(Position* pos, Point pt, int dist, Color color)
             return 0;
 
         else if (point_color(pos, n) == EMPTY
-             || point_color(pos, n) == color) {
+             || point_color(pos, n) == color) 
+        {
             if (dist > 1
-                && !no_stones_of_color(pos, n, dist - 1, color))
+            && !no_stones_of_color(pos, n, dist - 1, color))
                 return 0;
         }
     }
@@ -66,43 +52,21 @@ int no_stones_of_color(Position* pos, Point pt, int dist, Color color)
 }
 
 
-int has_more_libs(Position* pos, Point pt, Color c)
-{
-    if (point_color(pos, pt) != EMPTY)
-        return 0;
+int get_min_libs(Position* pos, Point pt) {
 
-    int k;
-    Point new_point;
-    int min_libs = 10;
-    FORALL_NEIGHBORS(pos, pt, k, new_point) {
-        if (point_color(pos, new_point) == c) {
-
-            if (point_color(pos, new_point) == OUT)
-                continue; // fixes edge
-
-            Block b = point_block(pos, new_point);
-
-            int libs = block_nlibs(pos, b);
-            if (libs > 1)
-                return 1;
-        }
-    }
-
-    return 0;
-}
-
-int get_min_libs(Position* pos, Point pt, Color c) 
-{
     if (point_color(pos, pt) != EMPTY)
         return 10;
 
     int k;
-    Point new_point;
+    Point new;
     int min_libs = 10;
-    FORALL_NEIGHBORS(pos, pt, k, new_point) {
-        if (point_color(pos, new_point) == c) {
+    FORALL_NEIGHBORS(pos, pt, k, new) {
+        if (point_color(pos, new) != EMPTY) {
             
-            Block b = point_block(pos, new_point);
+            if (point_color(pos, new) == OUT)
+                continue; // fixes edge
+
+            Block b = point_block(pos, new);
 
             int libs = block_nlibs(pos, b);
             if (libs < min_libs)
