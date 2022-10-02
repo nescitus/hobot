@@ -25,6 +25,7 @@ extern double PROB_HEURISTIC_CAPTURE, PROB_HEURISTIC_PAT3;
 extern double PROB_SSAREJECT, PROB_RSAREJECT;
 extern double RESIGN_THRES;
 extern int DYNKOMI_PERIOD;
+extern double TERMINATE_PLAYOUT;
 //------------------------------Unexposed constants----------------------------
 extern double URGENT_PATTERN_SCORE;
 extern double TENUKI_PATTERN_SCORE;
