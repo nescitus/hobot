@@ -94,6 +94,7 @@ int    cmpint(const void *i, const void *j);
 void   compute_big_eye(Position *pos, Point pt, Slist points);
 void   compute_block(Position *pos, Point pt, Slist stones, Slist libs,
                                                                     int nlibs);
+int count_atari(Position* pos, Point pt);
 void   compute_cfg_distances(Position *pos, Point pt, char cfg_map[BOARDSIZE]);
 Byte   compute_env4(Position *pos, Point pt, int offset);
 char*  empty_position(Position *pos);
@@ -181,7 +182,7 @@ __INLINE__ void  board_set_size(Position *pos, int sz) {pos->size = sz;}
 __INLINE__ int   board_size(Position *pos) {return pos->size;}
 __INLINE__ int   board_captured_neighbors(Position *pos) 
                                                    {return pos->undo_capture;}
-__INLINE__ Color color_other(Color c)                 {return c ^ 1;}
+__INLINE__ Color color_other(Color c)                 {return (Color)((int)c ^ 1);}
 __INLINE__ Block point_block(Position *pos, Point pt) {return pos->block[pt];}
 __INLINE__ Color point_color(Position *pos, Point pt) {return pos->color[pt];}
 __INLINE__ Byte  point_env4(Position *pos, Point pt)  {return pos->env4[pt];}

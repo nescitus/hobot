@@ -111,6 +111,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WholeProgramOptimization>true</WholeProgramOptimization>
+      <CompileAs>CompileAsC</CompileAs>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -121,6 +122,7 @@
     <ClCompile Include="detect.c" />
     <ClCompile Include="fuseki_main.c" />
     <ClCompile Include="fuseki_guide.c" />
+    <ClCompile Include="gen.c" />
     <ClCompile Include="komi.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="hobot.c" />

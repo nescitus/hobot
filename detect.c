@@ -58,15 +58,15 @@ int get_min_libs(Position* pos, Point pt) {
         return 10;
 
     int k;
-    Point new;
+    Point new_point;
     int min_libs = 10;
-    FORALL_NEIGHBORS(pos, pt, k, new) {
-        if (point_color(pos, new) != EMPTY) {
+    FORALL_NEIGHBORS(pos, pt, k, new_point) {
+        if (point_color(pos, new_point) != EMPTY) {
             
-            if (point_color(pos, new) == OUT)
+            if (point_color(pos, new_point) == OUT)
                 continue; // fixes edge
 
-            Block b = point_block(pos, new);
+            Block b = point_block(pos, new_point);
 
             int libs = block_nlibs(pos, b);
             if (libs < min_libs)
