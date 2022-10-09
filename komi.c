@@ -20,14 +20,16 @@ void update_dyn_komi(Game *game)
 }
 
     void adjust_komi(Position *pos, double winrate)
-    // Dead simple dynamic komi. If we win  in more than 80% of simulations,
-    // we artificially drive the score down, typically getting a few points'
-    // winning margin.
     {
-        if (winrate < 0.80) {
+        // play with noral komi
+
+        if (winrate < DYNKOMI_GREEN) 
+        {
             pos->delta_komi = 0;
             return;
         }
+
+        // unused
 
         int nstones = board_nstones(pos);
         int moves_to_play = ((N * N * 3) / 4 - nstones) / 2;// Hyp: 25 % of EMPTY points at end
@@ -35,10 +37,20 @@ void update_dyn_komi(Game *game)
         double add = (1.0 * moves_to_play) / endmove;
         if (add < 0.0) add = 0.0;
 
-        if (winrate > 0.80) {
+        add = 0.5; // testing
+
+        if (winrate > DYNKOMI_GREEN) 
+        {
             if (pos->to_play == WHITE)
                 pos->delta_komi -= add;
             else
                 pos->delta_komi += add;
         }
+
+        // limit komi adjustement
+
+        if (pos->delta_komi < -15)
+            pos->delta_komi = -15;
+        if (pos->delta_komi > 15)
+            pos->delta_komi = 15;
     }

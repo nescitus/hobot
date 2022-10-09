@@ -3,7 +3,7 @@
 static char buf[4096];
 static int  raw;
 // ----------------- Initial Values for Tree Policy parameters ----------------
-int   N_SIMS             = 6000;
+int   N_SIMS             = 9000;
 int   MAX_TIME           = 10000; // max move time in milliseconds
 int   RAVE_EQUIV         = 3500;
 int   EXPAND_VISITS      = 8;
@@ -17,7 +17,8 @@ int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
 int   PRIOR_EMPTYAREA    = 10;
 int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
-int DYNKOMI_PERIOD         = 1;
+int DYNKOMI_PERIOD         = 100;
+double DYNKOMI_GREEN = 0.65;
 
 // --------------- Initial Values for Random Policy parameters-- --------------
 double PROB_HEURISTIC_CAPTURE = 0.9;   // probability of heuristic suggestions
