@@ -1,8 +1,8 @@
-// hobot.c -- Poor Go-playing engine
-
+// komi.c -- dynamic komi manipulations
 #include "hobot.h"
 
-char buf[BUFLEN];
+double TERMINATE_PLAYOUT = 75;
+int HEAVY_PLAYOUT_DEPTH = 8;
 
 double mcplayout(Position* pos, int amaf_map[], int owner_map[],
     int score_count[2 * N * N + 1], int disp)
@@ -13,8 +13,8 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
     double s = 0.0;
     int    passes = 0;
     Point  last_moves_neighbors[40], moves[BOARDSIZE], move;
-    if (disp) 
-    {
+    if (disp) {
+        //disp_ladder = 1;
         fprintf(stderr, "** SIMULATION **\n");
     }
     if (board_nmoves(pos) > 0 && board_last_move(pos) == 0) passes = 1;
@@ -29,7 +29,6 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
         // We simply try the moves our heuristics generate, in a particular
         // order, but not with 100% probability; this is on the border between
         // "rule-based playouts" and "probability distribution playouts".
-
         make_list_last_moves_neighbors(pos, last_moves_neighbors, 4);
 
         // Capture heuristic suggestions
@@ -37,8 +36,7 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
             PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
             goto found;
 
-        /*
-        if (depth < 16 && is_beyond_one_third == 0) {
+        if (depth < HEAVY_PLAYOUT_DEPTH && is_beyond_one_third == 0) {
 
             if (random_int(10000) <= 0.25 * 10000.0)
             {
@@ -55,7 +53,6 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
                 }
             }
         }
-        */
 
         // ko
 
@@ -109,7 +106,7 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
         }
         else {
             if (amaf_map[move] == 0)      // mark the point with 1 for BLACK
-                                          // WHITE because pos is updated after this line
+                // WHITE because in michi.py pos is updated after this line
                 amaf_map[move] = (board_color_to_play(pos) == WHITE ? 1 : -1);
             // TODO: make amaf premium depth-dependent
             passes = 0;
@@ -120,12 +117,25 @@ double mcplayout(Position* pos, int amaf_map[], int owner_map[],
         double capt_score = get_capture_score(pos);
 
         if (capt_score > TERMINATE_PLAYOUT
-        || capt_score < -TERMINATE_PLAYOUT) 
-        {
+        || capt_score < -TERMINATE_PLAYOUT) {
+
+            //short_playouts_nb++;
             return capt_score;
         }
 
     }
     s = playout_score(pos, owner_map, score_count);
     return s;
+}
+
+int get_capture_score(Position* pos)
+{
+    return (pos->caps[1] - pos->caps[0] - board_komi(pos) - board_delta_komi(pos));
+}
+
+Point random_move_by_coors() {
+    int x0 = random_int(N) + 1;
+    int y0 = random_int(N) + 1;
+    Point pt = y0 * (N + 1) + x0;
+    return pt;
 }

@@ -33,7 +33,12 @@ extern double DYNKOMI_GREEN;
 //------------------------------Unexposed constants----------------------------
 extern double URGENT_PATTERN_SCORE;
 extern double TENUKI_PATTERN_SCORE;
+
+extern int is_beyond_one_third;
+extern double TERMINATE_PLAYOUT;
+extern int HEAVY_PLAYOUT_DEPTH;
 //------------------------------- Data Structures -----------------------------
+
 typedef struct {
     char    name[2][32];    // players name 
     char    rank[2][4];     // players rank
