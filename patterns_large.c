@@ -57,6 +57,8 @@ typedef struct hash_t {
 // Displacements with respect to the central point
 typedef struct shift_t { int x, y; } Shift;
 
+int MAX_PAT_SIZE = 13; // max pattern size - 1 (for max available value of 14 use 13)
+
 //---------------------------- Global Data ------------------------------------
 Shift pat_gridcular_seq[] = {
     {0,0},      // d=1,2,3 is not considered separately                size 1
@@ -462,7 +464,7 @@ double large_pattern_probability(Point pt)
     int size = 0;
 
     if (large_patterns_loaded)
-        for (int s=1 ; s<13 ; s++) {
+        for (int s=1 ; s<MAX_PAT_SIZE ; s++) {
             int len = pat_gridcular_size[s];
             k = update_zobrist_hash_at_point(large_coord[pt], s, k);
             int i = find_pat(k);
@@ -472,11 +474,6 @@ double large_pattern_probability(Point pt)
                 prob = patterns[i].prob;
                 prev_key = last_key;
                 last_key = patterns[i].id;
-
-                if (patterns[i].id >= 1064482 && patterns[i].id < 1066922) {
-                    sprintf(buf, "Added pattern no. %d is used", last_key);
-                    log_fmt_s('U', buf, NULL);
-                }
 
                 matched_len = len;
             }
@@ -513,7 +510,7 @@ double large_pattern_prob_no_stats(Point pt)
     int size = 0;
 
     if (large_patterns_loaded)
-        for (int s = 1; s < 13; s++) {
+        for (int s = 1; s < MAX_PAT_SIZE; s++) {
             int len = pat_gridcular_size[s];
             k = update_zobrist_hash_at_point(large_coord[pt], s, k);
             int i = find_pat(k);
