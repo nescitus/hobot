@@ -7,8 +7,7 @@ int  nmoves;       // number of moves loaded from the sgf file
 Byte size_already_set;
 // Displacements towards the neighbors of a point
 //                      North East South  West  NE  SE  SW  NW
-static int   delta[] = { -N-1,   1,  N+1,   -1, -N,  W,  N, -W};
-static char  buf[4046];    
+static int   delta[] = { -N-1,   1,  N+1,   -1, -N,  W,  N, -W}; 
 
 // ---------------------- Update of the Game struct ---------------------------
 Game *new_game(Position *pos)

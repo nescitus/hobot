@@ -13,6 +13,9 @@
 #else
     #define ZOBRIST_HASH_SIZE BOARDSIZE
 #endif
+
+extern char buf[40000];
+
 // ---------------------------- MCTS Constants --------------------------------
 extern int   N_SIMS, MAX_TIME, RAVE_EQUIV, EXPAND_VISITS;
 extern int   PRIOR_EVEN, PRIOR_SELFATARI, PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_MANY;

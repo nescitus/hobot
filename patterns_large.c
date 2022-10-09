@@ -90,7 +90,6 @@ int primes[32]={5,      11,    37,   103,   293,   991, 2903,  9931,
                 1013, 1583,  2503,  3491,  4637,  5501, 6571,  7459,
                 8513, 9433, 10433, 11447, 11887, 12409, 2221,  4073};
 
-static char buf[512];
 int         color[256];
 ZobristHash zobrist_hashdata[ZOBRIST_HASH_SIZE][4];
 LargePat*   patterns;

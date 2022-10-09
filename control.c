@@ -1,6 +1,6 @@
 // control.c -- Overall management of the MCTS search (dynkomi, time management)
 #include "hobot.h"
-char buf[BUFLEN];
+
 float saved_time_left;
 #define max(a, b) ((a)<(b) ? (a) : (b))
 int saved_nodes;

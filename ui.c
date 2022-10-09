@@ -1,6 +1,6 @@
 // ui.c -- User Interface (Command Line Interface + gtp interface)
 #include "hobot.h"
-static char buf[40000];
+char buf[40000];
 
 void expand(Position *pos, TreeNode *tree);
 Point        allpoints[BOARDSIZE];

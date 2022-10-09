@@ -1,5 +1,4 @@
 #include "hobot.h"
-static char buf[BUFLEN];
 
 //============================= debug subcommands =============================
 

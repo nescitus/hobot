@@ -22,7 +22,6 @@ double TERMINATE_PLAYOUT = 75;
 //
 // -------------------------------- Global Data -------------------------------
 Mark         *mark1, *mark2, *already_suggested;
-char         buf[BUFLEN];
 static int   disp_ladder;
 static char* colstr  = "@ABCDEFGHJKLMNOPQRST";
 int is_beyond_halfway = 0;

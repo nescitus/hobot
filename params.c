@@ -1,6 +1,5 @@
 // params.c -- Variable parameters used by the program
 #include "hobot.h"
-static char buf[4096];
 static int  raw;
 // ----------------- Initial Values for Tree Policy parameters ----------------
 int   N_SIMS             = 9000;
