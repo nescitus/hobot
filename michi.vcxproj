@@ -127,7 +127,6 @@
     <ClCompile Include="params.c" />
     <ClCompile Include="patterns_large.c" />
     <ClCompile Include="patterns_small.c" />
-    <ClCompile Include="playout.c" />
     <ClCompile Include="reject.c" />
     <ClCompile Include="sgf.c" />
     <ClCompile Include="ui.c" />

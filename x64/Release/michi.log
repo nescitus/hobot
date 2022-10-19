@@ -1,0 +1,24 @@
+﻿  control.c
+C:\Users\ppkoz\Documents\GitHub\hobot\control.c(5,1): warning C4005: 'max': macro redefinition
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\ucrt\stdlib.h(1282): message : see previous definition of 'max'
+  debug.c
+  detect.c
+C:\Users\ppkoz\Documents\GitHub\hobot\detect.c(54,36): warning C4020: 'point_is_color': too many actual parameters
+  fuseki_guide.c
+  fuseki_main.c
+  hobot.c
+C:\Users\ppkoz\Documents\GitHub\hobot\hobot.c(703,28): warning C4020: 'undo_move': too many actual parameters
+C:\Users\ppkoz\Documents\GitHub\hobot\hobot.c(767,30): warning C4142: 'random_move_by_coors': benign redefinition of type
+C:\Users\ppkoz\Documents\GitHub\hobot\hobot.c(823,63): warning C4020: 'large_pattern_probability': too many actual parameters
+C:\Users\ppkoz\Documents\GitHub\hobot\hobot.c(1397,1): warning C4142: 'get_best_prior': benign redefinition of type
+  komi.c
+  params.c
+  patterns_large.c
+  patterns_small.c
+  reject.c
+  sgf.c
+  ui.c
+  board.obj : MSIL .netmodule or module compiled with /GL found; restarting link with /LTCG; add /LTCG to the link command line to improve linker performance
+  Generating code
+  Finished generating code
+  michi.vcxproj -> C:\Users\ppkoz\Documents\GitHub\hobot\x64\Release\hobot.exe

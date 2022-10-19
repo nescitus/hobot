@@ -24,8 +24,8 @@ extern int   lib_shortage_bonus[11];
 extern int   PRIOR_CFG[], LEN_PRIOR_CFG;
 extern int   REPORT_PERIOD;
 extern int   max_book_depth;
-extern double PROB_HEURISTIC_CAPTURE, PROB_HEURISTIC_PAT3;
-extern double PROB_SSAREJECT, PROB_RSAREJECT;
+extern double PROB_HEURISTIC_CAPTURE, PROB_HEURISTIC_PAT3, PROB_HEURISTIC_LARGE_PAT;
+extern double PROB_SSAREJECT, PROB_RSAREJECT, PROB_UNIFORM_PLAYOUT;
 extern double RESIGN_THRES;
 // ----------------------------- Dynamic komi ---------------------------------
 extern int DYNKOMI_PERIOD;
@@ -33,12 +33,7 @@ extern double DYNKOMI_GREEN;
 //------------------------------Unexposed constants----------------------------
 extern double URGENT_PATTERN_SCORE;
 extern double TENUKI_PATTERN_SCORE;
-
-extern int is_beyond_one_third;
-extern double TERMINATE_PLAYOUT;
-extern int HEAVY_PLAYOUT_DEPTH;
 //------------------------------- Data Structures -----------------------------
-
 typedef struct {
     char    name[2][32];    // players name 
     char    rank[2][4];     // players rank
@@ -132,6 +127,10 @@ int    gen_playout_moves_pat3(Position *pos, Slist heuristic_set, float prob,
                                                                   Slist moves);
 double mcplayout(Position *pos, int amaf_map[], int owner_map[],
                                         int score_count[2*N*N], int disp);
+double hobot_playout(Position* pos, int amaf_map[], int owner_map[],
+    int score_count[2 * N * N], int disp);
+double random_playout(Position* pos, int amaf_map[], int owner_map[],
+    int score_count[2 * N * N], int disp);
 TreeNode* new_tree_node(void);
 void   print_pos(Position *pos, FILE *f, int *owner_map);
 Point  tree_search(Position *pos, TreeNode *tree, int n, int owner_map[],

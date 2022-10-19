@@ -2,30 +2,31 @@
 #include "hobot.h"
 static int  raw;
 // ----------------- Initial Values for Tree Policy parameters ----------------
-int   N_SIMS             = 12000;
+int   N_SIMS             = 15000;
 int   MAX_TIME           = 10000; // max move time in milliseconds
 int   RAVE_EQUIV         = 3500;
 int   EXPAND_VISITS      = 8;
 int   PRIOR_EVEN         = 10;   // should be even number; 0.5 prior 
-int   PRIOR_SELFATARI    = 20;   // negative prior
-int   PRIOR_CAPTURE_ONE  = 30;
-int   PRIOR_CAPTURE_MANY = 60;
-int   PRIOR_PAT3         = 20;
-int   PRIOR_LARGEPATTERN = 300;  // most moves have relatively small probability
+int   PRIOR_SELFATARI    = 10;   // negative prior
+int   PRIOR_CAPTURE_ONE  = 15;
+int   PRIOR_CAPTURE_MANY = 30;
+int   PRIOR_PAT3         = 10;
+int   PRIOR_LARGEPATTERN = 100;  // most moves have relatively small probability
 int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
 int   PRIOR_EMPTYAREA    = 10;
 int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
-
 int DYNKOMI_PERIOD         = 100;
 double DYNKOMI_GREEN = 0.65;
 
 // --------------- Initial Values for Random Policy parameters-- --------------
 double PROB_HEURISTIC_CAPTURE = 0.9;   // probability of heuristic suggestions
 double PROB_HEURISTIC_PAT3    = 0.95;  // being taken in playout
+double PROB_HEURISTIC_LARGE_PAT = 0.10;
 double PROB_SSAREJECT = 0.9;// prob of rejecting suggested self-atari in playout
 double PROB_RSAREJECT = 0.5;// prob of rejecting random self-atari in playout
                            // this is lower than above to allow nakade
+double PROB_UNIFORM_PLAYOUT = 0.15;
 // ----------------- Initial Values for general parameters --------------------
 int    use_dynamic_komi        = 0;
 double komi_per_handicap_stone = 7.0;
@@ -109,16 +110,18 @@ char* param_playout(const char *param)
 // Implement gtp command that list or modify parameters of the playout policy
 {
     char *ret=buf, key_value[80];
-    char *known_params = "\nPROB_HEURISTIC_CAPTURE\nPROB_HEURISTIC_PAT3\n"
-        "PROB_REJECT_SELF_ATARI_RANDOM\nPROB_REJECT_SELF_ATARI_SUGGESTED\n";
+    char *known_params = "\nPROB_HEURISTIC_CAPTURE\nPROB_HEURISTIC_PAT3\nPROB_HEURISTIC_LARGE_PAT\n"
+        "PROB_REJECT_SELF_ATARI_RANDOM\nPROB_REJECT_SELF_ATARI_SUGGESTED\nPROB_UNIFORM_PLAYOUT\n";
 
     if (param == NULL) {    // List current values
         pk_line = 0;
         buf[0] = 0;
         PRINT_KEY_VALUE(PROB_HEURISTIC_CAPTURE, %.2f);
         PRINT_KEY_VALUE(PROB_HEURISTIC_PAT3, %.2f);
+        PRINT_KEY_VALUE(PROB_HEURISTIC_LARGE_PAT, %.2f);
         PRINT_KEY_VALUE(PROB_SSAREJECT, %.2f);
         PRINT_KEY_VALUE(PROB_RSAREJECT, %.2f);
+        PRINT_KEY_VALUE(PROB_UNIFORM_PLAYOUT, %.2f);
     }
     else if (strcmp(param, "help") == 0)
         ret = known_params;
@@ -128,10 +131,14 @@ char* param_playout(const char *param)
         READ_VALUE(PROB_HEURISTIC_CAPTURE, %lf)
     else if (strcmp(param, "PROB_HEURISTIC_PAT3") == 0)
         READ_VALUE(PROB_HEURISTIC_PAT3, %lf)
+    else if (strcmp(param, "PROB_HEURISTIC_LARGE_PAT") == 0)
+        READ_VALUE(PROB_HEURISTIC_LARGE_PAT, %lf)
     else if (strcmp(param, "PROB_SSAREJECT") == 0)
         READ_VALUE(PROB_SSAREJECT, %lf)
     else if (strcmp(param, "PROB_RSAREJECT") == 0)
         READ_VALUE(PROB_RSAREJECT, %lf)
+    else if (strcmp(param, "PROB_UNIFORM_PLAYOUT") == 0)
+        READ_VALUE(PROB_UNIFORM_PLAYOUT, %lf)
     else {
         log_fmt_s('W',"%s is not a param_playout", param);
         strtok(NULL," \t\n");                   // make the strtok buffer empty
