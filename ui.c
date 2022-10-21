@@ -2,7 +2,7 @@
 #include "hobot.h"
 char buf[40000];
 
-void expand(Position *pos, TreeNode *tree);
+void expand(Position *pos, TreeNode *tree, int owner_map[]);
 Point        allpoints[BOARDSIZE];
 
 static int   game_ongoing=1, i;

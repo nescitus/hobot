@@ -2,19 +2,21 @@
 #include "hobot.h"
 static int  raw;
 // ----------------- Initial Values for Tree Policy parameters ----------------
-int   N_SIMS             = 15000;
+int   N_SIMS             = 16000;
 int   MAX_TIME           = 10000; // max move time in milliseconds
 int   RAVE_EQUIV         = 3500;
 int   EXPAND_VISITS      = 8;
 int   PRIOR_EVEN         = 10;   // should be even number; 0.5 prior 
-int   PRIOR_SELFATARI    = 10;   // negative prior
-int   PRIOR_CAPTURE_ONE  = 15;
-int   PRIOR_CAPTURE_MANY = 30;
+int   PRIOR_SELFATARI    = 12;   // negative prior
+int   PRIOR_CAPTURE_ONE  = 18;
+int   PRIOR_CAPTURE_MANY = 36;
+int   PRIOR_ATARI        = 2;
+int   PRIOR_DBL_ATARI    = 8;
 int   PRIOR_PAT3         = 10;
-int   PRIOR_LARGEPATTERN = 100;  // most moves have relatively small probability
+int   PRIOR_LARGEPATTERN = 200;  // most moves have relatively small probability
 int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
-int   PRIOR_EMPTYAREA    = 10;
+int   PRIOR_EMPTYAREA    = 12;
 int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
 int DYNKOMI_PERIOD         = 100;
 double DYNKOMI_GREEN = 0.65;
@@ -152,7 +154,7 @@ char* param_tree(const char *param)
 {
     char *ret=buf, key_value[80];
     char *known_params = "\nN_SIMS\nMAX_TIME\nRAVE_EQUIV\nEXPAND_VISITS\n"
-        "PRIOR_EVEN\nPRIOR_SELFATARI\nPRIOR_CAPTURE_ONE\nPRIOR_CAPTURE_MANY\n"
+        "PRIOR_EVEN\nPRIOR_SELFATARI\nPRIOR_CAPTURE_ONE\nPRIOR_CAPTURE_MANY\nPRIOR_ATARI\nPRIOR_DOUBLE_ATARI\n"
         "PRIOR_PAT3\nPRIOR_LARGEPATTERN\nPRIOR_CFG[0]\nPRIOR_CFG[1]\n"
         "PRIOR_CFG[2]\nPRIOR_EMPTYAREA\n";
 
@@ -167,6 +169,8 @@ char* param_tree(const char *param)
         PRINT_KEY_VALUE(PRIOR_SELFATARI, %d);
         PRINT_KEY_VALUE(PRIOR_CAPTURE_ONE, %d);
         PRINT_KEY_VALUE(PRIOR_CAPTURE_MANY, %d);
+        PRINT_KEY_VALUE(PRIOR_ATARI, %d);
+        PRINT_KEY_VALUE(PRIOR_DBL_ATARI, %d);
         PRINT_KEY_VALUE(PRIOR_PAT3, %d);
         PRINT_KEY_VALUE(PRIOR_LARGEPATTERN, %d);
         PRINT_KEY_VALUE(PRIOR_CFG[0], %d);
@@ -194,6 +198,10 @@ char* param_tree(const char *param)
         READ_VALUE(PRIOR_CAPTURE_ONE, %d)
     else if (strcmp(param, "PRIOR_CAPTURE_MANY") == 0)
         READ_VALUE(PRIOR_CAPTURE_MANY, %d)
+    else if (strcmp(param, "PRIOR_ATARI") == 0)
+        READ_VALUE(PRIOR_ATARI, %d)
+    else if (strcmp(param, "PRIOR_DBL_ATARI") == 0)
+        READ_VALUE(PRIOR_DBL_ATARI, %d)
     else if (strcmp(param, "PRIOR_PAT3") == 0)
         READ_VALUE(PRIOR_PAT3, %d)
     else if (strcmp(param, "PRIOR_LARGEPATTERN") == 0)

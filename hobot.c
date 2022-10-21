@@ -312,10 +312,7 @@ int gen_playout_moves_capture(Position *pos, Slist heuristic_set, float prob,
 
 int gen_playout_moves_pat_large(Position* pos, Slist heuristic_set, float prob,
     Slist moves)
-    // Compute list of candidate next moves in the order of preference (3x3 pattern)
-    // heuristic_set is the set of coordinates considered for applying heuristics;
-    // this is the immediate neighborhood of last two moves in the playout, but
-    // the whole board while prioring the tree.
+    // Compute list of large pattern moves with sufficiently high score
 {
     copy_to_large_board(pos);
     slist_clear(moves);
@@ -669,7 +666,7 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
                         PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
                 goto found;
 
-        if (depth < 16 && is_beyond_one_third == 0) {
+        if (depth < 8 && is_beyond_one_third == 0) {
 
             if (random_int(10000) <= PROB_HEURISTIC_LARGE_PAT * 10000.0) 
             {
@@ -721,14 +718,6 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
 
 
         // random move suggestions
-        // (called two additional times if selected move
-        // is marked for rejection)
-
-        pt = random_move_by_coors();
-        if (is_rejected_in_playout(pos, pt))
-            pt = random_move_by_coors();
-        if (is_rejected_in_playout(pos, pt))
-            pt = random_move_by_coors();
 
         move = choose_random_move(pos, y0*(N+1) + x0 , disp);
 found:
@@ -780,7 +769,7 @@ TreeNode* new_tree_node(void)
     return node;
 }
 
-void expand(Position *pos, TreeNode *tree)
+void expand(Position *pos, TreeNode *tree, int owner_map[])
 // add and initialize children to a leaf node which represents the Position pos
 {
     char     cfg_map[BOARDSIZE];
@@ -838,6 +827,7 @@ void expand(Position *pos, TreeNode *tree)
     tree->nchildren = nchildren;
 
     // Update the prior for the 'capture' and 3x3 patterns suggestions
+
     gen_playout_moves_capture(pos, allpoints, 1, 1, moves, sizes);
     int k=1;
     FORALL_IN_SLIST(moves, pt) {
@@ -890,7 +880,7 @@ void expand(Position *pos, TreeNode *tree)
 
         int height = line_height(pt, board_size(pos));  // 0-indexed
 
-        if (height <= 3 && empty_area(pos, pt, 3)) {
+        if (height <= 4 && empty_area(pos, pt, 3)) {
 
             // No stones around; negative prior for the 1st + 2nd lines, 
             // positive for the 3rd line and smaller positive prior 
@@ -907,6 +897,10 @@ void expand(Position *pos, TreeNode *tree)
             if (height == 3) {
                 node->prior_visits += PRIOR_EMPTYAREA / 2;
                 node->prior_wins += PRIOR_EMPTYAREA / 2;
+            }
+            if (height == 4) {
+                node->prior_visits += PRIOR_EMPTYAREA;
+                node->prior_wins += 0;
             }
         }
         
@@ -936,13 +930,48 @@ void expand(Position *pos, TreeNode *tree)
         }
 
         undo_move(&pos2);
+
+        if (nplayouts_real > 2000) {
+            double ownership = owner_map[pt] / nplayouts_real;
+
+            if (ownership > -10.0 && ownership < 10.0) {
+                node->prior_visits += 5;
+                node->prior_wins += 5;
+            }
+
+            if (ownership > -20.0 && ownership < 20.0) {
+                node->prior_visits += 5;
+                node->prior_wins += 5;
+            }
+
+            if (ownership > -30.0 && ownership < 30.0) {
+                node->prior_visits += 5;
+                node->prior_wins += 5;
+            }
+
+            if (ownership > -40.0 && ownership < 40.0) {
+                node->prior_visits += 5;
+                node->prior_wins += 5;
+            }
+
+            if (ownership < -60.0 && ownership > 60.0) {
+                node->prior_visits += 5;
+                node->prior_wins += 0;
+            }
+
+            if (ownership < -80.0 && ownership > 80.0) {
+                node->prior_visits += 10;
+                node->prior_wins += 0;
+            }
+        }
     }
 
     // Third pass: if we didn't find an urgent local move, 
     // we need to initialize patterns globally; if we did,
     // only urgent moves get pattern bonus.
 
-    if (best_pattern < URGENT_PATTERN_SCORE) {
+    if (best_pattern < URGENT_PATTERN_SCORE) 
+    {
         for (int k = 0; k < tree->nchildren; k++) {
 
             node = tree->children[k];
@@ -1004,21 +1033,18 @@ void expand(Position *pos, TreeNode *tree)
         if (in_atari == 0) {
             int cnt = count_atari(pos2, pt);
 
-            // negative prior for a vulgar atari
-            // that does not capture anything
-            // (implied by in_atari == 0)
-            /*
+            // single atari
+
             if (cnt == 1) {
-                node->prior_visits += 6;
-                node->prior_wins += 0;
+                node->prior_visits += PRIOR_ATARI;
+                node->prior_wins += PRIOR_ATARI;
             }
-            */
 
             // double atari
 
             if (cnt > 1) {
-                node->prior_visits += 10;
-                node->prior_wins += 10;
+                node->prior_visits += PRIOR_DBL_ATARI;
+                node->prior_wins += PRIOR_DBL_ATARI;
             }
         }
 
@@ -1026,6 +1052,8 @@ void expand(Position *pos, TreeNode *tree)
             node->prior_visits += PRIOR_SELFATARI;
             node->prior_wins += 0;  // negative prior
             node->visits += 5; // cheating: self-atari needs more effort
+
+            // ladder fix
 
             char* ble = slist_str_as_point(moves); // list of atari escapes
             int l = (int)strlen(ble);
@@ -1168,7 +1196,7 @@ TreeNode* most_urgent(TreeNode **children, int nchildren, int disp)
     return urgent;
 }
 
-int tree_descend(Position *pos, TreeNode *tree, int amaf_map[], int disp
+int tree_descend(Position *pos, TreeNode *tree, int amaf_map[], int owner_map[], int disp
                                                             , TreeNode **nodes)
 // Descend through the tree to a leaf
 {
@@ -1198,7 +1226,7 @@ int tree_descend(Position *pos, TreeNode *tree, int amaf_map[], int disp
         }
 
         if (node->children == NULL && node->visits >= EXPAND_VISITS)
-            expand(pos, node);
+            expand(pos, node, owner_map);
     }
     return last;
 }
@@ -1313,7 +1341,7 @@ Point tree_search(Position *pos, TreeNode *tree, int n, int owner_map[],
 
     // Initialize the root node if necessary
     if (tree->children == NULL) 
-        expand(pos, tree);
+        expand(pos, tree, owner_map);
 
     // Test mode to view priors quality
     if (N_SIMS == 0)
@@ -1339,7 +1367,7 @@ Point tree_search(Position *pos, TreeNode *tree, int n, int owner_map[],
         if (i>0 && i % REPORT_PERIOD == 0) 
             print_tree_summary(tree, i, stderr); 
 
-        last = tree_descend(workpos, tree, amaf_map, disp, nodes);
+        last = tree_descend(workpos, tree, amaf_map, owner_map, disp, nodes);
         s = mcplayout(workpos, amaf_map, owner_map, score_count, disp);
         tree_update(pos, nodes, last, amaf_map, s, disp);
         best = best_move(tree, NULL);
