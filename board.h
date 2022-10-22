@@ -91,6 +91,7 @@ void   board_init(void);
 void   board_finish(void);
 void   block_compute_libs(Position *pos, Block b, Slist libs, int max_libs);
 int    cmpint(const void *i, const void *j);
+int    count_atari(Position* pos, Point pt);
 void   compute_big_eye(Position *pos, Point pt, Slist points);
 void   compute_block(Position *pos, Point pt, Slist stones, Slist libs,
                                                                     int nlibs);

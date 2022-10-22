@@ -826,10 +826,11 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
     tree->nchildren = nchildren;
 
-    // Update the prior for the 'capture' and 3x3 patterns suggestions
+    // Update the prior for the capture
 
     gen_playout_moves_capture(pos, allpoints, 1, 1, moves, sizes);
-    int k=1;
+    
+    int k = 1;
     FORALL_IN_SLIST(moves, pt) {
         char* ret = play_move(pos, pt);
         if (ret[0] != 0) 
@@ -847,6 +848,9 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
         }
         k++;
     }
+
+    // Update the prior for the 3x3 patterns suggestions
+
     gen_playout_moves_pat3(pos, allpoints, 1, moves);
     
     FORALL_IN_SLIST(moves, pt) {
@@ -930,6 +934,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
         }
 
         undo_move(&pos2);
+
+        // preference for contested areas
 
         if (nplayouts_real > 2000) {
             double ownership = owner_map[pt] / nplayouts_real;
@@ -1031,7 +1037,7 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
         
         if (in_atari == 0) {
-            int cnt = count_atari(pos2, pt);
+            int cnt = count_atari(&pos2, pt);
 
             // single atari
 
@@ -1206,7 +1212,10 @@ int tree_descend(Position *pos, TreeNode *tree, int amaf_map[], int owner_map[],
     nodes[last] = tree;
    
     while (nodes[last]->children != NULL && passes <2) {
-        if (disp) print_pos(pos, stderr, NULL);
+        
+        if (disp) 
+            print_pos(pos, stderr, NULL);
+        
         // Pick the most urgent child
         TreeNode *node = most_urgent(nodes[last]->children, 
                                             nodes[last]->nchildren, disp);

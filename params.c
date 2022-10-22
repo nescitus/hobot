@@ -8,18 +8,18 @@ int   RAVE_EQUIV         = 3500;
 int   EXPAND_VISITS      = 8;
 int   PRIOR_EVEN         = 10;   // should be even number; 0.5 prior 
 int   PRIOR_SELFATARI    = 12;   // negative prior
-int   PRIOR_CAPTURE_ONE  = 18;
-int   PRIOR_CAPTURE_MANY = 36;
+int   PRIOR_CAPTURE_ONE  = 90;
+int   PRIOR_CAPTURE_MANY = 180;
 int   PRIOR_ATARI        = 2;
 int   PRIOR_DBL_ATARI    = 8;
 int   PRIOR_PAT3         = 10;
-int   PRIOR_LARGEPATTERN = 200;  // most moves have relatively small probability
+int   PRIOR_LARGEPATTERN = 400;  // most moves have relatively small probability
 int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
 int   PRIOR_EMPTYAREA    = 12;
 int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
 int DYNKOMI_PERIOD         = 100;
-double DYNKOMI_GREEN = 0.65;
+double DYNKOMI_GREEN       = 0.65;
 
 // --------------- Initial Values for Random Policy parameters-- --------------
 double PROB_HEURISTIC_CAPTURE = 0.9;   // probability of heuristic suggestions

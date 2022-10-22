@@ -565,7 +565,7 @@ update_libs:
 Position* new_position()
 // Return a position with size of board and komi initialized
 {
-    Position *pos = hobot_malloc(sizeof(Position));
+    Position* pos = hobot_malloc(sizeof(Position));
     pos->size = N;
     empty_position(pos);
     return pos;

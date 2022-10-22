@@ -450,7 +450,8 @@ void free_large_patterns(void)
     free(patterns);
 }
 
-double large_pattern_probability(Point pt)
+double large_pattern_probability(Point pt, Point ko)
+
 // return probability of large-scale pattern at coordinate pt. 
 // Multiple progressively wider patterns may match a single coordinate,
 // we consider the largest one.
@@ -483,11 +484,18 @@ double large_pattern_probability(Point pt)
                 non_matched_len = len;
         }
 
+    // Fix: excluded patterns can be played during a ko fight
+
+    if (ko != PASS_MOVE && prob > 100.0)
+    {
+        prob = 0;
+    }
+
     // Safeguard against zeroing patterns 
     // that seem important based on high score
     // on the previous size; also log such situations.
 
-    if (last_prob >= 0.200 && last_prob < 10.0 && prob == 0) {
+    if (last_prob >= 0.150 && last_prob < 100.0 && prob < 0.100) {
         prob = last_prob;
         if (size >= 10) {
             sprintf(buf, "Predecessor: %d scored %f, adjusted pattern: %d", prev_key, last_prob, last_key);
@@ -498,7 +506,7 @@ double large_pattern_probability(Point pt)
     return prob;
 }
 
-double large_pattern_prob_no_stats(Point pt)
+double large_pattern_prob_no_stats(Point pt, Point ko)
 // return probability of large-scale pattern at coordinate pt. 
 // Multiple progressively wider patterns may match a single coordinate,
 // we consider the largest one.
@@ -526,12 +534,11 @@ double large_pattern_prob_no_stats(Point pt)
                 non_matched_len = len;
         }
 
-    // Safeguard against zeroing patterns 
-    // that seem important based on high score
-    // on the previous size; also log such situations.
+    // Fix: excluded patterns can be played during a ko fight
 
-    if (last_prob >= 0.200 && last_prob < 10.0 && prob == 0) {
-        prob = last_prob;
+    if (ko != PASS_MOVE && prob > 100.0)
+    {
+        prob = 0;
     }
 
     return prob;

@@ -152,7 +152,8 @@ char*  make_list_pat3_matching(Position *pos, Point pt);
 char*  make_list_pat_matching(Point pt, int verbose);
 void   init_large_patterns(const char *prob, const char *spat);
 void   log_hashtable_synthesis();
-double large_pattern_probability(Point pt);
+double large_pattern_probability(Point pt, Point ko);
+double large_pattern_prob_no_stats(Point pt, Point ko);
 void   init_zobrist_hashdata(void);
 //---------------------------- Functions in sgf.c -----------------------------
 Game*  new_game(Position *pos);
@@ -204,3 +205,7 @@ __INLINE__ int pat3_match(Position *pos, Point pt)
     int env8=point_env8(pos, pt), q=env8 >> 3, r=env8 & 7;
     return (pat3set[q] & bit[r]) != 0;
 }
+
+// function to be assigned to their respective files
+
+Point get_best_prior(Position* pos, TreeNode* tree);
