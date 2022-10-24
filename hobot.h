@@ -14,12 +14,14 @@
     #define ZOBRIST_HASH_SIZE BOARDSIZE
 #endif
 
+#define MAX_LIB_CNT 10
+
 extern char buf[40000];
 
 // ---------------------------- MCTS Constants --------------------------------
 extern int   N_SIMS, MAX_TIME, RAVE_EQUIV, EXPAND_VISITS;
 extern int   PRIOR_EVEN, PRIOR_SELFATARI, PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_MANY, PRIOR_ATARI, PRIOR_DBL_ATARI;
-extern int   PRIOR_PAT3, PRIOR_LARGEPATTERN, LEN_PRIOR_CFG, PRIOR_EMPTYAREA, PRIOR_CORNER;
+extern int   PRIOR_PAT3, PRIOR_LARGEPATTERN, LEN_PRIOR_CFG, PRIOR_EMPTYAREA, PRIOR_OWNER;
 extern int   lib_shortage_bonus[11];
 extern int   PRIOR_CFG[], LEN_PRIOR_CFG;
 extern int   REPORT_PERIOD;

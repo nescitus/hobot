@@ -782,8 +782,10 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
     // Prepare common fate graph map
 
-    if (board_last_move(pos) != PASS_MOVE)
+    if (board_last_move(pos) != PASS_MOVE) 
+    {
         compute_cfg_distances(pos, board_last_move(pos), cfg_map);
+    }
 
     // Prepare for large pattern detection
 
@@ -798,7 +800,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
     tree->children = hobot_calloc(slist_size(moves)+1, sizeof(TreeNode*));
 
-    FORALL_IN_SLIST(moves, pt) {
+    FORALL_IN_SLIST(moves, pt) 
+    {
         assert(point_color(pos, pt) == EMPTY);
         char* ret = play_move(pos, pt);
         
@@ -813,10 +816,13 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
         undo_move(pos);
 
-        // artificially high pattern score = EXCLUSION
+        // artificially high pattern score = EXCLUSION...
 
         if (pattern_scores[pt] > 99.0 && pos->ko == 0)
             continue;
+
+        // ...unless we are playing a ko
+
         else if (pattern_scores[pt] > 99.0)
             pattern_scores[pt] = 0;
 
@@ -831,10 +837,13 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
     gen_playout_moves_capture(pos, allpoints, 1, 1, moves, sizes);
     
     int k = 1;
-    FORALL_IN_SLIST(moves, pt) {
+    FORALL_IN_SLIST(moves, pt) 
+    {    
         char* ret = play_move(pos, pt);
+
         if (ret[0] != 0) 
             continue;
+        
         undo_move(pos);
 
         node = childset[pt];
@@ -888,21 +897,22 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
             // No stones around; negative prior for the 1st + 2nd lines, 
             // positive for the 3rd line and smaller positive prior 
-            // for the 4th line. It sanitizes opening and invasions.
+            // for the 4th line. 5th line is again discouraged. 
+            // It sanitizes opening and invasions.
 
             if (height <= 1) {
                 node->prior_visits += PRIOR_EMPTYAREA;
                 node->prior_wins += 0;
             }
-            if (height == 2) {
+            else if (height == 2) {
                 node->prior_visits += PRIOR_EMPTYAREA;
                 node->prior_wins += PRIOR_EMPTYAREA;
             }
-            if (height == 3) {
+            else if (height == 3) {
                 node->prior_visits += PRIOR_EMPTYAREA / 2;
                 node->prior_wins += PRIOR_EMPTYAREA / 2;
             }
-            if (height == 4) {
+            else if (height == 4) {
                 node->prior_visits += PRIOR_EMPTYAREA;
                 node->prior_wins += 0;
             }
@@ -912,8 +922,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
         // included in common fate graph map
 
         if (board_last_move(pos) != PASS_MOVE
-        && cfg_map[pt] - 1 < LEN_PRIOR_CFG) {
-
+        && cfg_map[pt] - 1 < LEN_PRIOR_CFG) 
+        {
             double patternprob = pattern_scores[pt];
 
             // Get max probability of a cfg-relevant pattern.
@@ -925,7 +935,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
             if (patternprob > best_pattern)
                 best_pattern = patternprob;
 
-            if (patternprob > 0.0) {
+            if (patternprob > 0.0) 
+            {
                 double pattern_prior = sqrt(patternprob); // tone up
 
                 node->prior_visits += pattern_prior * PRIOR_LARGEPATTERN;
@@ -941,32 +952,37 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
             double ownership = owner_map[pt] / nplayouts_real;
 
             if (ownership > -10.0 && ownership < 10.0) {
-                node->prior_visits += 5;
-                node->prior_wins += 5;
+                node->prior_visits += PRIOR_OWNER;
+                node->prior_wins += PRIOR_OWNER;
             }
 
             if (ownership > -20.0 && ownership < 20.0) {
-                node->prior_visits += 5;
-                node->prior_wins += 5;
+                node->prior_visits += PRIOR_OWNER;
+                node->prior_wins += PRIOR_OWNER;
             }
 
             if (ownership > -30.0 && ownership < 30.0) {
-                node->prior_visits += 5;
-                node->prior_wins += 5;
+                node->prior_visits += PRIOR_OWNER;
+                node->prior_wins += PRIOR_OWNER;
             }
 
             if (ownership > -40.0 && ownership < 40.0) {
-                node->prior_visits += 5;
-                node->prior_wins += 5;
+                node->prior_visits += PRIOR_OWNER;
+                node->prior_wins += PRIOR_OWNER;
             }
 
             if (ownership < -60.0 && ownership > 60.0) {
-                node->prior_visits += 5;
+                node->prior_visits += PRIOR_OWNER;
+                node->prior_wins += 0;
+            }
+
+            if (ownership < -70.0 && ownership > 70.0) {
+                node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += 0;
             }
 
             if (ownership < -80.0 && ownership > 80.0) {
-                node->prior_visits += 10;
+                node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += 0;
             }
         }
@@ -1061,8 +1077,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
             // ladder fix
 
-            char* ble = slist_str_as_point(moves); // list of atari escapes
-            int l = (int)strlen(ble);
+            char* escapes = slist_str_as_point(moves); // list of atari escapes
+            int l = (int)strlen(escapes);
 
             if (in_atari == 0 && l > 0) {
                 Block bb = point_block(&pos2, pt);
@@ -1086,7 +1102,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
     // Fifth step (optional): add a pass move.
     // Useful, for example in case of seki
 
-    if (tree->nchildren <= 2) {
+    if (tree->nchildren <= 2) 
+    {
         int nc = tree->nchildren;    
         tree->children[nc] = new_tree_node();
         tree->children[nc]->move = PASS_MOVE;

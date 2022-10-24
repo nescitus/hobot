@@ -17,6 +17,7 @@ int   PRIOR_LARGEPATTERN = 400;  // most moves have relatively small probability
 int   PRIOR_CFG[]        =     {24, 22, 8};
 int   LEN_PRIOR_CFG      = (sizeof(PRIOR_CFG)/sizeof(int));
 int   PRIOR_EMPTYAREA    = 12;
+int   PRIOR_OWNER        = 5;
 int lib_shortage_bonus[11] = { 0, 0, 12, 8, 3, 1, 0, 0, 0, 0, 0 };
 int DYNKOMI_PERIOD         = 100;
 double DYNKOMI_GREEN       = 0.65;
@@ -156,7 +157,7 @@ char* param_tree(const char *param)
     char *known_params = "\nN_SIMS\nMAX_TIME\nRAVE_EQUIV\nEXPAND_VISITS\n"
         "PRIOR_EVEN\nPRIOR_SELFATARI\nPRIOR_CAPTURE_ONE\nPRIOR_CAPTURE_MANY\nPRIOR_ATARI\nPRIOR_DOUBLE_ATARI\n"
         "PRIOR_PAT3\nPRIOR_LARGEPATTERN\nPRIOR_CFG[0]\nPRIOR_CFG[1]\n"
-        "PRIOR_CFG[2]\nPRIOR_EMPTYAREA\n";
+        "PRIOR_CFG[2]\nPRIOR_EMPTYAREA\nPRIOR_OWNER\n";
 
     if (param == NULL) {    // List current values
         pk_line = 0;
@@ -177,6 +178,7 @@ char* param_tree(const char *param)
         PRINT_KEY_VALUE(PRIOR_CFG[1], %d);
         PRINT_KEY_VALUE(PRIOR_CFG[2], %d);
         PRINT_KEY_VALUE(PRIOR_EMPTYAREA, %d);
+        PRINT_KEY_VALUE(PRIOR_OWNER, %d);
     }
     else if (strcmp(param, "help") == 0)
         ret = known_params;
@@ -214,6 +216,8 @@ char* param_tree(const char *param)
         READ_VALUE(PRIOR_CFG[2], %d)
     else if (strcmp(param, "PRIOR_EMPTYAREA") == 0)
         READ_VALUE(PRIOR_EMPTYAREA, %d)
+    else if (strcmp(param, "PRIOR_OWNER") == 0)
+        READ_VALUE(PRIOR_OWNER, %d)
     else {
         log_fmt_s('W',"%s is not a param_tree", param);
         strtok(NULL," \t\n");                   // make the strtok buffer empty
