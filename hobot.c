@@ -12,7 +12,7 @@ MIT licence (i.e. almost public domain)
 
 double URGENT_PATTERN_SCORE = 0.200; // triggers urgent move scenario
 double TENUKI_PATTERN_SCORE = 0.199; // allows tenuki in urgent move scenario
-double TERMINATE_PLAYOUT = 75;
+double MERCY_LIMIT = 75;
 
 //========================= Definition of Data Structures =====================
 // Given a board of size NxN (N=9, 19, ...), we represent the position
@@ -622,8 +622,8 @@ double random_playout(Position* pos, int amaf_map[], int owner_map[],
 
         double capt_score = get_capture_score(pos);
 
-        if (capt_score > TERMINATE_PLAYOUT
-            || capt_score < -TERMINATE_PLAYOUT)
+        if (capt_score > MERCY_LIMIT
+            || capt_score < -MERCY_LIMIT)
         {
             return capt_score;
         }
@@ -637,7 +637,8 @@ double random_playout(Position* pos, int amaf_map[], int owner_map[],
 double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
                                            int score_count[2*N*N+1], int disp)
 // Start a Monte Carlo playout from a given position, return score for to-play
-// player at the starting position; amaf_map is board-sized scratchpad recording// who played at a given position first
+// player at the starting position; amaf_map is board-sized scratchpad 
+// recording who played at a given position first
 {
     int depth = 0;
     double s=0.0;
@@ -659,15 +660,21 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
         // We simply try the moves our heuristics generate, in a particular
         // order, but not with 100% probability; this is on the border between
         // "rule-based playouts" and "probability distribution playouts".
+
         make_list_last_moves_neighbors(pos, last_moves_neighbors, 4);
 
-        // Capture heuristic suggestions
+        // 1. Capture heuristic suggestions
+
         if((move=choose_capture_move(pos, last_moves_neighbors, 
                         PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
                 goto found;
 
-        if (depth < 8 && is_beyond_one_third == 0) {
+        // 2. Large pattern heuristic suggestions
+        // (in the first 1/3 of the simulations
+        // and at low depths)
 
+        if (depth < 8 && is_beyond_one_third == 0) 
+        {
             if (random_int(10000) <= PROB_HEURISTIC_LARGE_PAT * 10000.0) 
             {
                 Point allmoves[BOARDSIZE];
@@ -683,27 +690,9 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
                 }
             }
         }
-        
-        // ko
 
-        Point pt = pos->ko;
-        if (pt != PASS_MOVE && random_int(10000) <= 0.05 * 10000.0) {
+        // 3. 3x3 patterns heuristic suggestions
 
-            char* ret = play_move(pos, pt);
-
-            // Possible failure reasons:
-            // move is suicide, move retakes ko. 
-
-            if (ret[0] != 0)
-                continue;
-
-            undo_move(pos, pt);
-            move = pt;
-            goto found;
-        
-        }
-
-        // 3x3 patterns heuristic suggestions
         if (gen_playout_moves_pat3(pos, last_moves_neighbors,
                                            PROB_HEURISTIC_PAT3, moves)) {
             mark_init(already_suggested);
@@ -714,32 +703,33 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
             mark_release(already_suggested);
         }
             
+        // 4. Random move suggestions
+
         int x0 = random_int(N) + 1, y0 = random_int(N) + 1;
-
-
-        // random move suggestions
-
         move = choose_random_move(pos, y0*(N+1) + x0 , disp);
+
 found:
         depth++;
         if (move == PASS_MOVE) {      // No valid move : pass
             pass_move(pos);
             passes++;
         }
-        else {
+        else 
+        {
             if (amaf_map[move] == 0)      // mark the point with 1 for BLACK
                 // WHITE because in michi.py pos is updated after this line
                 amaf_map[move] = (board_color_to_play(pos) == WHITE ? 1 : -1);
                 // TODO: make amaf premium depth-dependent
-            passes=0;
+            passes = 0;
         }
 
         // mercy break
 
         double capt_score = get_capture_score(pos);
 
-        if (capt_score > TERMINATE_PLAYOUT
-        || capt_score < -TERMINATE_PLAYOUT) {
+        if (capt_score > MERCY_LIMIT
+        || capt_score < -MERCY_LIMIT) 
+        {
             return capt_score;
         }
 
