@@ -1,5 +1,8 @@
 // hobot -- A minimalistic Go-playing engine (from Petr Baudis michi.py via hobot2)
 #include "board.h"
+
+#define EXCLUDE_PATTERNS
+
 //========================= Definition of Data Structures =====================
 
 #define MAX_GAME_LEN (N*N*3)
@@ -16,6 +19,8 @@
 
 #define MAX_LIB_CNT 10
 
+extern Color hobot_color;
+extern int global_simulation_count;
 extern char buf[40000];
 
 // ---------------------------- MCTS Constants --------------------------------

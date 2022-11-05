@@ -4,6 +4,8 @@
 float saved_time_left;
 #define max(a, b) ((a)<(b) ? (a) : (b))
 int saved_nodes;
+Color hobot_color;
+int global_simulation_count;
 
 //----------------------------- time management -------------------------------
 int nsims(Game *game) 
@@ -263,8 +265,38 @@ Point genmove (Game *game, TreeNode **tree, int *owner_map, int *score_count)
     if (board_nstones(pos) <= 9 /* || is_time_limited*/)
         saved_nodes = 0;
 
+    hobot_color = pos->to_play;
+
+    // example how you can pit two engine versions against one another:
+
+    /**
+    if (hobot_color == WHITE) { 
+        PRIOR_SELFATARI = 24;   // negative prior
+        PRIOR_CAPTURE_ONE = 90;
+        PRIOR_CAPTURE_MANY = 180;
+        PRIOR_ATARI = 2;
+        PRIOR_DBL_ATARI = 8;
+        PRIOR_PAT3 = 10;
+        PRIOR_LARGEPATTERN = 400;
+        PRIOR_EMPTYAREA = 30;
+        PRIOR_OWNER = 5;
+    }
+    else {
+        PRIOR_SELFATARI = 12;   // negative prior
+        PRIOR_CAPTURE_ONE = 90;
+        PRIOR_CAPTURE_MANY = 180;
+        PRIOR_ATARI = 2;
+        PRIOR_DBL_ATARI = 8;
+        PRIOR_PAT3 = 10;
+        PRIOR_LARGEPATTERN = 400;
+        PRIOR_EMPTYAREA = 12;
+        PRIOR_OWNER = 5;
+    }
+    */
+
     // fuseki on 19x19 board
 
+    
     if (board_size(pos) == 19) {
         int idum_save = idum;
         idum = true_random_seed();
@@ -273,6 +305,7 @@ Point genmove (Game *game, TreeNode **tree, int *owner_map, int *score_count)
         if (pt != PASS_MOVE)
             return pt;
     }
+    
 
     if (is_better_to_pass(game, owner_map, score_count)) {
         pt = PASS_MOVE;

@@ -485,11 +485,12 @@ double large_pattern_probability(Point pt, Point ko)
         }
 
     // Fix: excluded patterns can be played during a ko fight
-
+#ifdef EXCLUDE_PATTERNS
     if (ko != PASS_MOVE && prob > 100.0)
     {
         prob = 0;
     }
+#endif
 
     // Safeguard against zeroing patterns 
     // that seem important based on high score
@@ -535,11 +536,12 @@ double large_pattern_prob_no_stats(Point pt, Point ko)
         }
 
     // Fix: excluded patterns can be played during a ko fight
-
+#ifdef EXCLUDE_PATTERNS
     if (ko != PASS_MOVE && prob > 100.0)
     {
         prob = 0;
     }
+#endif
 
     return prob;
 }

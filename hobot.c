@@ -524,8 +524,10 @@ Point choose_capture_move(Position *pos,Slist heuristic_set,float prob,int disp)
         FORALL_IN_SLIST(heuristic_set, pt)
             if (point_is_color(pos, pt)) {
                 Block b = point_block(pos, pt);
+
                 if (is_marked(already_suggested, b)) 
                     continue;
+            
                 mark(already_suggested, b);
                 fix_atari(pos, pt, SINGLEPT_NOK, TWOLIBS_TEST,
                                                 twolib_edgeonly, moves, sizes);
@@ -669,6 +671,9 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
                         PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
                 goto found;
 
+        // [14599] winrate 0.507 | seq  D4 Q4 D16 Q16 R17| can  D4(0.507) Q17(0.484) C4(0.493) Q16(0.495) D3(0.479)
+
+
         // 2. Large pattern heuristic suggestions
         // (in the first 1/3 of the simulations
         // and at low depths)
@@ -806,6 +811,7 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
         undo_move(pos);
 
+#ifdef EXCLUDE_PATTERNS
         // artificially high pattern score = EXCLUSION...
 
         if (pattern_scores[pt] > 99.0 && pos->ko == 0)
@@ -815,6 +821,7 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
         else if (pattern_scores[pt] > 99.0)
             pattern_scores[pt] = 0;
+#endif
 
         node = childset[pt] = tree->children[nchildren++] = new_tree_node();
         node->move = pt;
@@ -938,8 +945,11 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
         // preference for contested areas
 
-        if (nplayouts_real > 2000) {
-            double ownership = owner_map[pt] / nplayouts_real;
+        if (global_simulation_count > 2000) {
+            double ownership = 100 * owner_map[pt] / global_simulation_count;
+
+            //sprintf(buf, "map %d cnt %d product %5.5f", owner_map[pt], global_nodecount, ownership);
+            //log_fmt_s('S', buf, NULL);
 
             if (ownership > -10.0 && ownership < 10.0) {
                 node->prior_visits += PRIOR_OWNER;
@@ -1368,6 +1378,7 @@ Point tree_search(Position *pos, TreeNode *tree, int n, int owner_map[],
     for ( i=0; i<n ; i++) {
 
         // TODO: is_early, is_late
+        global_simulation_count = i;
 
         if (i > n / 2)
             is_beyond_halfway = 1;
