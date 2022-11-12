@@ -53,6 +53,28 @@ int no_stones_of_color(Position* pos, Point pt, int dist, Color color)
     return 1;
 }
 
+int get_min_libs_for(Position* pos, Point pt, Color c)
+{
+    if (point_color(pos, pt) != EMPTY)
+        return 10;
+
+    int k;
+    Point new_point;
+    int min_libs = 10;
+    FORALL_NEIGHBORS(pos, pt, k, new_point) {
+        if (point_color(pos, new_point) == c) {
+
+            Block b = point_block(pos, new_point);
+
+            int libs = block_nlibs(pos, b);
+            if (libs < min_libs)
+                min_libs = libs;
+        }
+    }
+
+    return min_libs;
+}
+
 
 int get_min_libs(Position* pos, Point pt) {
 

@@ -269,35 +269,22 @@ Point genmove (Game *game, TreeNode **tree, int *owner_map, int *score_count)
 
     // example how you can pit two engine versions against one another:
 
-    /**
-    if (hobot_color == WHITE) { 
-        PRIOR_SELFATARI = 24;   // negative prior
-        PRIOR_CAPTURE_ONE = 90;
-        PRIOR_CAPTURE_MANY = 180;
-        PRIOR_ATARI = 2;
-        PRIOR_DBL_ATARI = 8;
-        PRIOR_PAT3 = 10;
-        PRIOR_LARGEPATTERN = 400;
-        PRIOR_EMPTYAREA = 30;
-        PRIOR_OWNER = 5;
+    /**/
+    if (hobot_color == WHITE) {
+
+    //
+
+        PRIOR_CAPTURE_TWO = 140;
     }
     else {
-        PRIOR_SELFATARI = 12;   // negative prior
-        PRIOR_CAPTURE_ONE = 90;
-        PRIOR_CAPTURE_MANY = 180;
-        PRIOR_ATARI = 2;
-        PRIOR_DBL_ATARI = 8;
-        PRIOR_PAT3 = 10;
-        PRIOR_LARGEPATTERN = 400;
-        PRIOR_EMPTYAREA = 12;
-        PRIOR_OWNER = 5;
+        PRIOR_CAPTURE_TWO = 140;
     }
-    */
+    /**/
 
     // fuseki on 19x19 board
 
-    
-    if (board_size(pos) == 19) {
+    if (board_size(pos) == 19) 
+    {
         int idum_save = idum;
         idum = true_random_seed();
         pt = get_fuseki_move(pos);

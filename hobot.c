@@ -519,7 +519,8 @@ Point choose_capture_move(Position *pos,Slist heuristic_set,float prob,int disp)
     int   twolib_edgeonly = 1;
     Point move=PASS_MOVE, moves[20], sizes[20];
 
-    if (random_int(10000) <= prob*10000.0) {
+    if (random_int(10000) <= prob*10000.0) 
+    {
         mark_init(already_suggested);
         FORALL_IN_SLIST(heuristic_set, pt)
             if (point_is_color(pos, pt)) {
@@ -671,9 +672,6 @@ double hobot_playout(Position *pos, int amaf_map[], int owner_map[],
                         PROB_HEURISTIC_CAPTURE, disp)) != PASS_MOVE)
                 goto found;
 
-        // [14599] winrate 0.507 | seq  D4 Q4 D16 Q16 R17| can  D4(0.507) Q17(0.484) C4(0.493) Q16(0.495) D3(0.479)
-
-
         // 2. Large pattern heuristic suggestions
         // (in the first 1/3 of the simulations
         // and at low depths)
@@ -774,6 +772,7 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
     Position pos2;
     TreeNode *childset[BOARDSIZE], *node;
     double pattern_scores[BOARDSIZE];
+    Color oppo = color_other(pos->to_play);
 
     // Prepare common fate graph map
 
@@ -829,29 +828,70 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
 
     tree->nchildren = nchildren;
 
-    // Update the prior for the capture
+    // Update the prior for the capture.
+    // Bonus depends on the number of captured stones
+    // (one, two, many). Furthermore, we try to detect
+    // non-urgent captures, so that we give them a smaller
+    // bonus.
 
     gen_playout_moves_capture(pos, allpoints, 1, 1, moves, sizes);
     
     int k = 1;
-    FORALL_IN_SLIST(moves, pt) 
-    {    
+    FORALL_IN_SLIST(moves, pt)
+    {
         char* ret = play_move(pos, pt);
 
-        if (ret[0] != 0) 
+        if (ret[0] != 0)  // legality check
             continue;
-        
+
         undo_move(pos);
 
+        // TODO: detect situations when both sides can capture
+
+        int capture_may_be_urgent = 1; // default assumption
+
+        // We check if playing at the last remaining liberty
+        // would give the opponent more liberties. If not,
+        // capture is not urgent and will have smaller weight.
+
+        pos->to_play = color_other(pos->to_play);
+
+       char* ret2 = play_move(pos, pt);
+            
+       // TODO: proper handling of illegal moves
+       // (ko? suicide?)
+
+       if (ret2[0] != 0) 
+       {
+           goto out;
+       }
+
+       int in_atari = fix_atari(pos, pt, SINGLEPT_OK, TWOLIBS_TEST,
+                !TWOLIBS_EDGE_ONLY, moves, sizes);
+
+       if (in_atari)
+          capture_may_be_urgent = 0;
+            
+        undo_move(pos);
+
+        out:
+
+        pos->to_play = color_other(pos->to_play);
+       
+        // end of checking for capture's urgency
+
         node = childset[pt];
-        if (sizes[k] == 1) {
-            node->prior_visits += PRIOR_CAPTURE_ONE;
-            node->prior_wins += PRIOR_CAPTURE_ONE;
-        }
-        else {
-            node->prior_visits += PRIOR_CAPTURE_MANY;
-            node->prior_wins += PRIOR_CAPTURE_MANY;
-        }
+
+        int capture_bonus = 0;
+
+        if (capture_may_be_urgent == 1)
+            capture_bonus = get_capture_bonus(sizes[k], PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_TWO, PRIOR_CAPTURE_MANY);
+        else 
+            capture_bonus = get_capture_bonus(sizes[k], 10, 15, 30);
+
+        node->prior_visits += capture_bonus;
+        node->prior_wins += capture_bonus;
+
         k++;
     }
 
@@ -951,40 +991,25 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
             //sprintf(buf, "map %d cnt %d product %5.5f", owner_map[pt], global_nodecount, ownership);
             //log_fmt_s('S', buf, NULL);
 
-            if (ownership > -10.0 && ownership < 10.0) {
+            if (ownership > -10.0 && ownership < 10.0) { // 10-90%: +1 * PRIOR_OWNER
                 node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += PRIOR_OWNER;
             }
 
-            if (ownership > -20.0 && ownership < 20.0) {
+            if (ownership > -20.0 && ownership < 20.0) { // 20-80%: +2 * PRIOR_OWNER
                 node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += PRIOR_OWNER;
             }
 
-            if (ownership > -30.0 && ownership < 30.0) {
+            if (ownership > -30.0 && ownership < 30.0) { // 30-70%: +3 * PRIOR_OWNER
                 node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += PRIOR_OWNER;
             }
 
-            if (ownership > -40.0 && ownership < 40.0) {
+            if (ownership > -40.0 && ownership < 40.0) { // 40-60%: +4 * PRIOR_OWNER
                 node->prior_visits += PRIOR_OWNER;
                 node->prior_wins += PRIOR_OWNER;
-            }
-
-            if (ownership < -60.0 && ownership > 60.0) {
-                node->prior_visits += PRIOR_OWNER;
-                node->prior_wins += 0;
-            }
-
-            if (ownership < -70.0 && ownership > 70.0) {
-                node->prior_visits += PRIOR_OWNER;
-                node->prior_wins += 0;
-            }
-
-            if (ownership < -80.0 && ownership > 80.0) {
-                node->prior_visits += PRIOR_OWNER;
-                node->prior_wins += 0;
-            }
+            }            
         }
     }
 
@@ -1073,7 +1098,7 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
         if (slist_size(moves) > 0) {
             node->prior_visits += PRIOR_SELFATARI;
             node->prior_wins += 0;  // negative prior
-            node->visits += 5; // cheating: self-atari needs more effort
+            node->visits += 5; // cheating: self-atari needs more effort TODO: test
 
             // ladder fix
 
@@ -1090,7 +1115,8 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
             }
         }
         else {
-            int min_libs = get_min_libs(pos, pt);
+            int min_libs;
+                min_libs = get_min_libs(pos, pt);
             if (min_libs < 10) {
                 node->prior_visits += lib_shortage_bonus[min_libs];
                 node->prior_wins += lib_shortage_bonus[min_libs];
@@ -1109,6 +1135,16 @@ void expand(Position *pos, TreeNode *tree, int owner_map[])
         tree->children[nc]->move = PASS_MOVE;
         tree->nchildren = nc+1;
     }
+}
+
+int get_capture_bonus(int amount, int v1, int v2, int v_many) 
+{
+    if (amount == 1)
+        return v1;
+    else if (amount == 2)
+        return v2;
+    else
+        return v_many;
 }
 
 void free_tree(TreeNode *tree)

@@ -25,7 +25,8 @@ extern char buf[40000];
 
 // ---------------------------- MCTS Constants --------------------------------
 extern int   N_SIMS, MAX_TIME, RAVE_EQUIV, EXPAND_VISITS;
-extern int   PRIOR_EVEN, PRIOR_SELFATARI, PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_MANY, PRIOR_ATARI, PRIOR_DBL_ATARI;
+extern int   PRIOR_EVEN, PRIOR_SELFATARI, PRIOR_CAPTURE_ONE, PRIOR_CAPTURE_TWO, PRIOR_CAPTURE_MANY;
+extern int   PRIOR_ATARI, PRIOR_DBL_ATARI;
 extern int   PRIOR_PAT3, PRIOR_LARGEPATTERN, LEN_PRIOR_CFG, PRIOR_EMPTYAREA, PRIOR_OWNER;
 extern int   lib_shortage_bonus[11];
 extern int   PRIOR_CFG[], LEN_PRIOR_CFG;
@@ -118,6 +119,7 @@ int    is_corner(Point pt, int size);
 int    empty_area(Position* pos, Point pt, int dist);
 int    no_stones_of_color(Position* pos, Point pt, int dist, Color color);
 int    get_min_libs(Position* pos, Point pt);
+int    gey_min_libs_for(Position* pos, Point pt, Color c);
 //-------------------------- Functions in hobot.c -----------------------------
 TreeNode* best_move(TreeNode *tree, TreeNode **except);
 void   collect_infos(TreeNode *tree, int n, TreeNode *best
